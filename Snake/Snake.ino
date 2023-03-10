@@ -1,9 +1,12 @@
-//BUG FIXES:
-//FIXED Overflow error when grabbing 9th apple (arrays can't keep up) 
-//apple is too big and leave trail
-//gameover screen needs work
-//
-//add sound when picking up apple, when changing direction, on game over.
+/*
+BUG FIXES:
+  FIXED Overflow error when grabbing 9th apple (arrays can't keep up) 
+  apple is too big and leaves trail
+
+FEATURES:
+  gameover screen needs work
+  add sound when picking up apple, when changing direction, on game over.
+*/
 
 
 // include the necessary libraries
@@ -14,15 +17,15 @@
 #define DC    9
 #define RESET    8
 
-//Butten pins
+//Button pins
 const int pinNorth = 2;
 const int pinEast = 5;
 const int pinSouth = 7;
 const int pinWest = 3;
 
-TFT myScreen = TFT(LCD_CS, DC, RESET);
+TFT myScreen = TFT(LCD_CS, DC, RESET); // initialises LCD screen
 
-//Snake vars
+// Snake vars
 static const int SCREEN_WIDTH = 160;
 static const int SCREEN_HEIGTH = 120;
 static const int UNIT_SIZE = 8;
@@ -50,7 +53,6 @@ bool south = false;
 bool checkRestartInput;
 
 void setup() {
-  //Random value
   Serial.begin(9600);
   randomSeed(analogRead(A0));
 
@@ -67,23 +69,12 @@ void setup() {
   digitalWrite(pinWest, LOW);
 
   newApple();  
-
-/**
-  tone(6, 1047, 330);
-  delay(220);
-  tone(6, 1568, 330);
-  delay(220);
-  tone(6, 2093, 330);
-  delay(220);
-  tone(6, 1976, 880);
-  delay(440);
-  tone(6, 1568, 330);
-**/
   
   running = true;
 
 }
 
+// main function
 void loop(){
   if (running) {
     move();
@@ -108,14 +99,15 @@ void startGame() {
 }
 
 void newApple() {
-  tone(6, 1047, 165);
   delay(110);
-  tone(6, 1319, 165);
   myScreen.fillCircle(appleX + (UNIT_SIZE/2), appleY + (UNIT_SIZE/2), UNIT_SIZE/2, myScreen.Color565(144, 238, 144));
   appleX = random(0, XGAME_UNITS) * UNIT_SIZE;
   appleY = random(0, YGAME_UNITS) * UNIT_SIZE;
 }
 
+/* 
+Serial monitor outputs are for debugging, I had problems with noise and such.
+*/
 void checkInput() {
   if (digitalRead(pinWest) == HIGH && direction != 'R') { 
     Serial.println("WEST");
@@ -160,12 +152,16 @@ void move() {
   }
 }
 
+
 void draw() {
   //draw apple
   myScreen.fill(255, 0, 0);
   myScreen.fillCircle(appleX + (UNIT_SIZE/2) - 1, appleY + (UNIT_SIZE/2) - 1, UNIT_SIZE/2 - 1, ST7735_RED);
 
-  //draw snake  
+  /* Draw Snake
+  Removes last bodypart and draws new bodypart in front
+  */
+
   myScreen.noStroke();
   myScreen.fill(0, 0, 0);
   myScreen.rect(x[bodyParts - 1], y[bodyParts - 1], UNIT_SIZE, UNIT_SIZE);
@@ -182,6 +178,7 @@ void checkApple() {
 }
 
 void checkCollision() {
+  //collision with snake
   for (int i = bodyParts; i > 0; i--) {
     if ((x[0] == x[i]) && (y[0] == y[i])) {
       running = false;
@@ -216,6 +213,8 @@ void gameOver() {
   myScreen.stroke(255, 255, 255);
   myScreen.setTextSize(2);
   int i = 0;
+
+  // Game over screen loop
   while (!running) {
     myScreen.stroke(255, 255, 255);
     myScreen.background(0, 0, 0);
@@ -233,26 +232,36 @@ void gameOver() {
 
 }
 
-
+/* CheckRestart()
+This function should check wether or not all buttons are pressed and if so it should restart the game.
+DOESN'T WORK YET
+*/
 bool checkRestart() {
+  bool north = false;
+  bool east = false;
+  bool south = false;
+  bool west = false;
+
   if (digitalRead(pinNorth) == HIGH) {
     Serial.println("NORTH");
-    bool north = true;
+    north = true;
   }
+
   if (digitalRead(pinWest) == HIGH) {
     Serial.println("WEST");
-    bool west = true;
+    west = true;
   }
+
   if (digitalRead(pinEast) == HIGH) {
     Serial.println("EAST");
-    bool east = true;
+    east = true;
   }
+  
   if (digitalRead(pinSouth) == HIGH) {
     Serial.println("SOUTH");
-    bool south = true;
+    south = true;
   }
 
   return south && east && west && north;
-
 
 }
